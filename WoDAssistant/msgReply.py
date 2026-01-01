@@ -11,16 +11,36 @@ import json
 import traceback
 import os
 
-listBroadcastGroup = WoDAssistant.broadcastData.listBroadcastGroup
-
-listPartyID = WoDAssistant.broadcastData.listPartyID
+listAdmin = []
+listBroadcastGroup = {}
+listPartyID = []
 
 def unity_reply(plugin_event, Proc):
     pass
 
 def unity_init_after(plugin_event, Proc):
     WoDAssistant.main.gProc = Proc
+    init_data()
     threading.Thread(target = threadingSend).start()
+
+def init_data():
+    global listAdmin
+    global listBroadcastGroup
+    global listPartyID
+    data = {}
+    try:
+        os.makedirs('./plugin/data/WoDAssistant', exist_ok = True)
+        with open('./plugin/data/WoDAssistant/config.json', 'r', encoding = 'utf-8') as f:
+            data = json.loads(f.read())
+        if 'listAdmin' in data:
+            listAdmin = data['listAdmin']
+        if 'listBroadcastGroup' in data:
+            listBroadcastGroup = data['listBroadcastGroup']
+        if 'listPartyID' in data:
+            listPartyID = data['listPartyID']
+    except Exception as e:
+        traceback.print_exc()
+        logProc(4, f'加载配置出错')
 
 def sendMessageForce(botHash, send_type, target_id, message):
     Proc = WoDAssistant.main.gProc
@@ -37,6 +57,7 @@ def sendMessageForce(botHash, send_type, target_id, message):
         plugin_event.send(send_type, target_id, message)
 
 def threadingSend():
+    global listPartyID
     while True:
         for partyID in listPartyID:
             try:
@@ -58,6 +79,7 @@ def threadingSend():
         time.sleep(300)
 
 def broadcastSend(message: str, partyID: int):
+    global listBroadcastGroup
     for botHashThis in listBroadcastGroup:
         if str(partyID) in listBroadcastGroup[botHashThis]:
             for groupIDThis in listBroadcastGroup[botHashThis][str(partyID)]:

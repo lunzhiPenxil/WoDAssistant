@@ -15,6 +15,5 @@ _  / / /_  /  __  / __ | / /__  /| |_  / / /__  / _  /    __  __/
 '''
 
 import WoDAssistant
-from . import broadcastData
 from . import main
 from . import msgReply
