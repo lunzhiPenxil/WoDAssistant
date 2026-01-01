@@ -1,3 +1,3 @@
-# OlivOSPluginTemplate
+# WoD小助手
 
-`./OlivOSPluginTemplate` 目录整体为[OlivOS](https://github.com/OlivOS-Team/OlivOS)插件默认模板，请结合使用。
+页游 World Of Dungeons 的辅助机器人，包含战报提示，物品技能查询，接口来源「Wod」传火祭祀场。
