@@ -29,8 +29,8 @@ def init_data():
     global listPartyID
     data = {}
     try:
-        os.makedirs('./plugin/data/WoDAssistant', exist_ok = True)
-        with open('./plugin/data/WoDAssistant/config.json', 'r', encoding = 'utf-8') as f:
+        os.makedirs(WoDAssistant.data.dataPath, exist_ok = True)
+        with open(f'{WoDAssistant.data.dataPath}/config.json', 'r', encoding = 'utf-8') as f:
             data = json.loads(f.read())
         if 'listAdmin' in data:
             listAdmin = data['listAdmin']
@@ -41,6 +41,22 @@ def init_data():
     except Exception as e:
         traceback.print_exc()
         logProc(4, f'加载配置出错')
+
+def save_data():
+    global listAdmin
+    global listBroadcastGroup
+    global listPartyID
+    try:
+        os.makedirs(WoDAssistant.data.dataPath, exist_ok = True)
+        with open(f'{WoDAssistant.data.dataPath}/config.json', 'w', encoding = 'utf-8') as f:
+            f.write(json.dumps({
+                'listAdmin': listAdmin,
+                'listBroadcastGroup': listBroadcastGroup,
+                'listPartyID': listPartyID
+            }))
+    except Exception as e:
+        traceback.print_exc()
+        logProc(4, f'写入配置出错')
 
 def sendMessageForce(botHash, send_type, target_id, message):
     Proc = WoDAssistant.main.gProc
@@ -217,8 +233,8 @@ def diff_fetchDropAnalysis(data, partyID: int):
 
 def writeData(data, partyID: int):
     try:
-        os.makedirs('./plugin/data/WoDAssistant', exist_ok = True)
-        with open(f'./plugin/data/WoDAssistant/cache_{partyID}.json', 'w', encoding = 'utf-8') as f:
+        os.makedirs(WoDAssistant.data.dataPath, exist_ok = True)
+        with open(f'{WoDAssistant.data.dataPath}/cache_{partyID}.json', 'w', encoding = 'utf-8') as f:
             f.write(json.dumps(data, indent = 4, ensure_ascii = False))
     except Exception as e:
         traceback.print_exc()
@@ -227,8 +243,8 @@ def writeData(data, partyID: int):
 def readData(partyID: int):
     res = None
     try:
-        os.makedirs('./plugin/data/WoDAssistant', exist_ok = True)
-        with open(f'./plugin/data/WoDAssistant/cache_{partyID}.json', 'r', encoding = 'utf-8') as f:
+        os.makedirs(WoDAssistant.data.dataPath, exist_ok = True)
+        with open(f'{WoDAssistant.data.dataPath}/cache_{partyID}.json', 'r', encoding = 'utf-8') as f:
             res = json.loads(f.read())
     except Exception as e:
         traceback.print_exc()
