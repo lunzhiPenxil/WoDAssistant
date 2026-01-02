@@ -59,6 +59,7 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                 if str(groupID) not in WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)]:
                     WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)].append(str(groupID))
                 WoDAssistant.dataIO.save_data()
+                plugin_event.reply('已将该团队绑定至本群')
             return
         command_this = '解绑团队'
         if message_str.startswith(command_this):
@@ -86,6 +87,7 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                         while partyID in WoDAssistant.data.listPartyID:
                             WoDAssistant.data.listPartyID.remove(partyID)
                 WoDAssistant.dataIO.save_data()
+                plugin_event.reply('已将该团队解绑至本群')
             return
         command_this = '刷新'
         if message_str.startswith(command_this):
