@@ -11,3 +11,5 @@ gProc: 'OlivOS.pluginAPI.shallow|None' = None
 listAdmin = []
 listBroadcastGroup = {}
 listPartyID = []
+
+broadcastTimer = 300

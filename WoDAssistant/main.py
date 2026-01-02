@@ -11,7 +11,7 @@ class Event(object):
         WoDAssistant.msgReply.unity_init_after(plugin_event, Proc)
 
     def private_message(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.shallow):
-        WoDAssistant.msgReply.unity_reply(plugin_event, Proc)
+        pass
 
     def group_message(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.shallow):
-        WoDAssistant.msgReply.unity_reply(plugin_event, Proc)
+        WoDAssistant.msgReply.unity_group_reply(plugin_event, Proc)
