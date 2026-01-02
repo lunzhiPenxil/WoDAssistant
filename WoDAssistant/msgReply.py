@@ -248,25 +248,32 @@ def release_reply(groupName:str, dataList: list):
         lvDiff = dataListThis['lvDiff']
         dropListData = []
         for dataListThis_this in dataListThis['dropList']:
+            diff_count = 0
             diff_str = ''
             newDrop_str = ''
             uniqType_str = ''
-            if dataListThis_this['newDrop'] is True:
-                diff_count = 0
-                if old_dataListThis is not None:
-                    for old_dataListThis_this in old_dataListThis['dropList']:
-                        if old_dataListThis_this['id'] == dataListThis_this['id']:
-                            diff_count = dataListThis_this['total'] - old_dataListThis_this['total']
-                            newDrop_str = '★'
-                            if diff_count > 0:
-                                diff_str = f" (+{diff_count})"
-                            break
+            newDrop = dataListThis_this['newDrop']
+            if old_dataListThis is not None:
+                for old_dataListThis_this in old_dataListThis['dropList']:
+                    if old_dataListThis_this['id'] == dataListThis_this['id']:
+                        diff_count = dataListThis_this['total'] - old_dataListThis_this['total']
+                        break
+            else:
+                diff_count = dataListThis_this['total']
+            flagNotFirst = times > 1
+            if (flagNotFirst or newDrop) and diff_count > 0:
+                diff_str = f" (+{diff_count})"
+            if flagNotFirst and diff_count > 0:
+                newDrop_str = '☆'
+            if newDrop is True:
+                newDrop_str = '★'
             if dataListThis_this['uniq'] != 'N':
                 uniqType_str = f"[{dataListThis_this['uniq']}]"
-            dropListData.append(f"{newDrop_str}{dataListThis_this['name']}{uniqType_str}: {dataListThis_this['total']}{diff_str}{(' / ' + str(dataListThis_this['maxDrop'])) if dataListThis_this['maxDrop'] != 0 else ''}")
+            dropListData.append(f"{newDrop_str}{dataListThis_this['name']}{uniqType_str}: {dataListThis_this['total']}{diff_str} / {(dataListThis_this['maxDrop']) if dataListThis_this['maxDrop'] != 0 else '∞'}")
         dropTotalList = '\n'.join(dropListData)
         resThis = f" {'='*2} 「{groupName}」 {'='*2}\n{intervalTime}{name} - 第{times}次\n{level} 难度{lvDiff}\n{lastDungeonTime}\n {'='*4} 【全部产出】 {'='*4}\n{dropTotalList}"
         res.append(resThis)
+    res.reverse()
     return res
 
 def logProc(level, message, segment = []):
