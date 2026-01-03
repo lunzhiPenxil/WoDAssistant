@@ -100,7 +100,8 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
             if botHash in WoDAssistant.data.listBroadcastGroup \
             and type(WoDAssistant.data.listBroadcastGroup[botHash]) is dict:
                 for i in WoDAssistant.data.listBroadcastGroup[botHash]:
-                    broadcastList.append(f"{i} - {WoDAssistant.webAPI.get_groupName(i)}")
+                    if str(groupID) in WoDAssistant.data.listBroadcastGroup[botHash][i]:
+                        broadcastList.append(f"{i} - {WoDAssistant.webAPI.get_groupName(i)}")
             if len(broadcastList) > 0:
                 reply_message_str += f"距离下次刷新还有[{WoDAssistant.data.broadcastTimer}]秒\n"
                 reply_message_str += '本群订阅列表如下:\n'
