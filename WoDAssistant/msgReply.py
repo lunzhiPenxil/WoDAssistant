@@ -11,6 +11,7 @@ import re
 def unity_init_after(plugin_event: None, Proc: OlivOS.pluginAPI.shallow):
     WoDAssistant.data.gProc = Proc
     WoDAssistant.dataIO.init_data()
+    WoDAssistant.dataIO.save_data()
     threading.Thread(target = threadingSend).start()
 
 def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.shallow):
