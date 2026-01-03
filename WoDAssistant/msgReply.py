@@ -44,7 +44,7 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                 '  - 立即进行一次刷新'
             )
             return
-        command_this = '绑定团队'
+        command_this = '订阅团队'
         if message_str.startswith(command_this):
             message_str = message_str.lstrip(command_this)
             message_str = message_str.lstrip(' ')
@@ -65,7 +65,7 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                 WoDAssistant.dataIO.save_data()
                 plugin_event.reply('已将该团队订阅至本群')
             return
-        command_this = '订阅团队'
+        command_this = '解绑团队'
         if message_str.startswith(command_this):
             message_str = message_str.lstrip(command_this)
             message_str = message_str.lstrip(' ')

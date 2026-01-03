@@ -4,8 +4,8 @@
     "namespace" : "WoDAssistant",
     "message_mode" : "old_string",
     "info" : "页游 World Of Dungeons 的辅助机器人，包含战报提示，物品技能查询，接口来源「Wod」传火祭祀场。",
-    "version" : "0.4.5",
-    "svn" : 45,
+    "version" : "0.4.6",
+    "svn" : 46,
     "compatible_svn" : 190,
     "priority" : 60000,
     "support" : [
