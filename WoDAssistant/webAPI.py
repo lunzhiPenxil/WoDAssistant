@@ -7,7 +7,7 @@ import traceback
 import requests
 import json
 
-def get_fetchList(partyID: int):
+def get_fetchList(partyID: int = -1, partyName: str = "", searchSize = 1, current = 1):
     res = None
     responseData = None
     try:
@@ -20,12 +20,12 @@ def get_fetchList(partyID: int):
             },
             data = json.dumps(obj = {
                 "page": {
-                    "current": 1,
-                    "size": 1
+                    "current": current,
+                    "size": searchSize
                 },
                 "query": {
                     "id": partyID,
-                    "name": ""
+                    "name": partyName
                 }
             }),
             timeout = 60
@@ -40,7 +40,8 @@ def get_fetchList(partyID: int):
         res = responseData
     return res
 
-def get_groupName(data: dict, partyID: int):
+def get_groupName(partyID: int):
+    data: dict = get_fetchList(partyID = partyID)
     res = f"团队[{partyID}]"
     try:
         if data is not None \
@@ -58,6 +59,29 @@ def get_groupName(data: dict, partyID: int):
         traceback.print_exc()
         WoDAssistant.logger.logProc(3, '名称解析失败')
     return res
+
+def get_groupSearchByName(partyName: str):
+    data: dict = get_fetchList(partyName = partyName, searchSize = 10)
+    res = []
+    try:
+        if data is not None \
+        and 'code' in data \
+        and 200 == data['code'] \
+        and 'status' in data \
+        and 1 == data['status'] \
+        and 'data' in data \
+        and type(data['data']) is dict \
+        and 'list' in data['data'] \
+        and type(data['data']['list']) is list \
+        and len(data['data']['list']) > 0:
+            for i in data['data']['list']:
+                res.append(i)
+    except Exception as e:
+        traceback.print_exc()
+        res = []
+        WoDAssistant.logger.logProc(3, '搜索团队失败')
+    return res
+    
 
 def get_fetchDropAnalysis(partyID: int):
     res = None
@@ -85,7 +109,8 @@ def get_fetchDropAnalysis(partyID: int):
         res = responseData
     return res
 
-def diff_fetchDropAnalysis(data: dict, partyID: int):
+def diff_fetchDropAnalysis(partyID: int):
+    data: dict = get_fetchDropAnalysis(partyID = partyID)
     res = []
     old_data = WoDAssistant.dataIO.readCache(partyID)
     WoDAssistant.dataIO.writeCache(data, partyID)

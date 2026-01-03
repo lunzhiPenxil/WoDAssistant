@@ -20,9 +20,9 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
     botHash = plugin_event.bot_info.hash
     groupID = plugin_event.data.group_id
     message_str: str = plugin_event.data.message
-    message_str = message_str.lower()
     message_str = message_str.strip(' ')
     command_this = '/wod'
+    message_str = message_str[:len(command_this)].lower() + message_str[len(command_this):] if len(message_str) > 4 else message_str.lower()
     if message_str.startswith(command_this):
         message_str = message_str.lstrip(command_this)
         message_str = message_str.lstrip(' ')
@@ -32,10 +32,14 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                 ' ==== WoD助手 ==== \n'
                 '/wod 帮助\n'
                 '  - 查看帮助\n'
-                '/wod 绑定团队 [团队ID]\n'
-                '  - 在群聊中发送以绑定播报\n'
+                '/wod 订阅团队 [团队ID]\n'
+                '  - 在群聊中发送以订阅播报\n'
                 '/wod 解绑团队 [团队ID]\n'
                 '  - 在群聊中发送以解绑播报\n'
+                '/wod 订阅列表\n'
+                '  - 查看本群的订阅列表\n'
+                '/wod 查询团队 [团队名称]\n'
+                '  - 用名称查询团队ID\n'
                 '/wod 刷新\n'
                 '  - 立即进行一次刷新'
             )
@@ -43,7 +47,7 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
         command_this = '绑定团队'
         if message_str.startswith(command_this):
             message_str = message_str.lstrip(command_this)
-            message_str = message_str = message_str.lstrip(' ')
+            message_str = message_str.lstrip(' ')
             partyID = get_int_safe(message_str)
             if partyID is None:
                 plugin_event.reply('非法的团队ID')
@@ -59,12 +63,12 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                 if str(groupID) not in WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)]:
                     WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)].append(str(groupID))
                 WoDAssistant.dataIO.save_data()
-                plugin_event.reply('已将该团队绑定至本群')
+                plugin_event.reply('已将该团队订阅至本群')
             return
-        command_this = '解绑团队'
+        command_this = '订阅团队'
         if message_str.startswith(command_this):
             message_str = message_str.lstrip(command_this)
-            message_str = message_str = message_str.lstrip(' ')
+            message_str = message_str.lstrip(' ')
             partyID = get_int_safe(message_str)
             if partyID is None:
                 plugin_event.reply('非法的团队ID')
@@ -87,7 +91,48 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                         while partyID in WoDAssistant.data.listPartyID:
                             WoDAssistant.data.listPartyID.remove(partyID)
                 WoDAssistant.dataIO.save_data()
-                plugin_event.reply('已将该团队解绑至本群')
+                plugin_event.reply('已将该团队解绑自本群')
+            return
+        command_this = '订阅列表'
+        if message_str.startswith(command_this):
+            reply_message_str = ''
+            broadcastList = []
+            if botHash in WoDAssistant.data.listBroadcastGroup \
+            and type(WoDAssistant.data.listBroadcastGroup[botHash]) is dict:
+                for i in WoDAssistant.data.listBroadcastGroup[botHash]:
+                    broadcastList.append(f"{i} - {WoDAssistant.webAPI.get_groupName(i)}")
+            if len(broadcastList) > 0:
+                reply_message_str += f"距离下次刷新还有[{WoDAssistant.data.broadcastTimer}]秒\n"
+                reply_message_str += '本群订阅列表如下:\n'
+                reply_message_str += '\n'.join(broadcastList)
+            else:
+                reply_message_str += '本群订阅列表为空'
+            plugin_event.reply(reply_message_str)
+            return
+        command_this = '搜索团队'
+        if message_str.startswith(command_this):
+            message_str = message_str.lstrip(command_this)
+            message_str = message_str.lstrip(' ')
+            partyName = message_str
+            reply_message_str = ''
+            data = WoDAssistant.webAPI.get_groupSearchByName(partyName = partyName)
+            data.reverse()
+            if len(data) > 0:
+                reply_message_str += '找到如下相近团队:\n'
+                partyList = []
+                for i in data:
+                    partyIDThis = "未知团队"
+                    partyNameThis = "未知团队"
+                    if 'id' in i:
+                        partyIDThis = i['id']
+                        partyNameThis = f"团队[{partyIDThis}]"
+                    if 'name' in i:
+                        partyNameThis = i['name']
+                    partyList.append(f"{partyIDThis} - {partyNameThis}")
+                reply_message_str += '\n'.join(partyList)
+            else:
+                reply_message_str += '未找到相近团队'
+            plugin_event.reply(reply_message_str)
             return
         command_this = '刷新'
         if message_str.startswith(command_this):
@@ -130,14 +175,8 @@ def threadingSendUnit():
         try:
             WoDAssistant.logger.logProc(2, f"开始更新团队[ID:{partyID}]的数据")
             messageList = release_reply(
-                WoDAssistant.webAPI.get_groupName(
-                    WoDAssistant.webAPI.get_fetchList(partyID),
-                    partyID
-                ),
-                WoDAssistant.webAPI.diff_fetchDropAnalysis(
-                    WoDAssistant.webAPI.get_fetchDropAnalysis(partyID),
-                    partyID
-                )
+                WoDAssistant.webAPI.get_groupName(partyID),
+                WoDAssistant.webAPI.diff_fetchDropAnalysis(partyID)
             )
             WoDAssistant.logger.logProc(2, f'已经完成团队[ID:{partyID}]数据更新')
             for message in messageList:
