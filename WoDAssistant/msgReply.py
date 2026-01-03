@@ -6,7 +6,6 @@ import WoDAssistant
 import threading
 import time
 import traceback
-import re
 
 def unity_init_after(plugin_event: None, Proc: OlivOS.pluginAPI.shallow):
     WoDAssistant.data.gProc = Proc
@@ -16,8 +15,6 @@ def unity_init_after(plugin_event: None, Proc: OlivOS.pluginAPI.shallow):
 
 def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.shallow):
     userID = plugin_event.data.user_id
-    if str(userID) not in WoDAssistant.data.listAdmin:
-        return
     botHash = plugin_event.bot_info.hash
     groupID = plugin_event.data.group_id
     message_str: str = plugin_event.data.message
@@ -27,10 +24,21 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
     if message_str.startswith(command_this):
         message_str = message_str.lstrip(command_this)
         message_str = message_str.lstrip(' ')
+        if 0 == len(message_str):
+            plugin_event.reply(
+                f"WoD小助手 WoDAssistant By lunzhiPenxil Ver.{WoDAssistant.data.version}({WoDAssistant.data.svn}) {WoDAssistant.data.OlivOSInfo}\n"
+                "欢迎使用本机器人! 请机器人管理员使用[/wod 帮助]查看帮助"
+            )
+            return
+        # 非管理直接拒绝消息
+        if str(userID) not in WoDAssistant.data.listAdmin:
+            return
         command_this = '帮助'
         if message_str.startswith(command_this):
             plugin_event.reply(
                 ' ==== WoD助手 ==== \n'
+                '/wod\n'
+                '  - 查看机器人信息\n'
                 '/wod 帮助\n'
                 '  - 查看帮助\n'
                 '/wod 订阅团队 [团队ID]\n'
@@ -102,7 +110,7 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
             and type(WoDAssistant.data.listBroadcastGroup[botHash]) is dict:
                 for i in WoDAssistant.data.listBroadcastGroup[botHash]:
                     if str(groupID) in WoDAssistant.data.listBroadcastGroup[botHash][i]:
-                        broadcastList.append(f"{i} - {WoDAssistant.webAPI.get_groupName(i)}")
+                        broadcastList.append(f"  {i} - {WoDAssistant.webAPI.get_groupName(i)}")
             if len(broadcastList) > 0:
                 reply_message_str += f"距离下次刷新还有[{WoDAssistant.data.broadcastTimer}]秒\n"
                 reply_message_str += '本群订阅列表如下:\n'
@@ -130,7 +138,7 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                         partyNameThis = f"团队[{partyIDThis}]"
                     if 'name' in i:
                         partyNameThis = i['name']
-                    partyList.append(f"{partyIDThis} - {partyNameThis}")
+                    partyList.append(f"  {partyIDThis} - {partyNameThis}")
                 reply_message_str += '\n'.join(partyList)
             else:
                 reply_message_str += '未找到相近团队'

@@ -2,7 +2,14 @@
 
 import OlivOS
 
+import platform
+
 pluginName = 'WoD小助手'
+
+version = '0.4.9'
+svn = 49
+
+OlivOSInfo = f"[Python {platform.python_version()} OlivOS {OlivOS.infoAPI.OlivOS_Version}]"
 
 dataPath = './plugin/data/WoDAssistant'
 
