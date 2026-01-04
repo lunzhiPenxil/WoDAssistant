@@ -111,7 +111,8 @@ def get_fetchDropAnalysis(partyID: int):
 
 def diff_fetchDropAnalysis(partyID: int):
     data: dict = get_fetchDropAnalysis(partyID = partyID)
-    res = []
+    res_diff = []
+    res_item = {}
     old_data = WoDAssistant.dataIO.readCache(partyID)
     WoDAssistant.dataIO.writeCache(data, partyID)
     if old_data is not None \
@@ -128,6 +129,15 @@ def diff_fetchDropAnalysis(partyID: int):
     and 'data' in data \
     and type(data['data']) is list:
         try:
+            for dataThis in old_data['data']:
+                if type(dataThis) is dict \
+                and 'dropList' in dataThis \
+                and type(dataThis['dropList']) is list:
+                    for dataThisDropThis in dataThis['dropList']:
+                        if type(dataThisDropThis) is dict \
+                        and "id" in dataThisDropThis \
+                        and "total" in dataThisDropThis:
+                            res_item[str(dataThisDropThis["id"])] = dataThisDropThis["total"]
             for dataThis in data['data']:
                 flagHit = False
                 flagChange = False
@@ -146,12 +156,16 @@ def diff_fetchDropAnalysis(partyID: int):
                     flagChange = True
                     dataThisObj['old'] = None
                 if flagChange:
-                    res.append(dataThisObj)
+                    res_diff.append(dataThisObj)
         except Exception as e:
             traceback.print_exc()
             WoDAssistant.logger.logProc(4, '比较数据时出现问题')
-            res = []
+            res_diff = []
     elif 'code' in data \
     and 200 != data['code']:
         WoDAssistant.logger.logProc(4, f"接口连接失败 {data['code']}: {data['msg']}")
+    res = {
+        'diff': res_diff,
+        'item': res_item
+    }
     return res

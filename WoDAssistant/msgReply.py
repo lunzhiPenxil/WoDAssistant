@@ -207,8 +207,10 @@ def broadcastSend(message: str, partyID: int):
                     message = message
                 )
 
-def release_reply(groupName:str, dataList: list):
+def release_reply(groupName:str, dataDict: dict):
     res = []
+    dataList: list = dataDict['diff']
+    itemDict: dict = dataDict['item']
     for dataListThisObj in dataList:
         dataListThis = dataListThisObj['new']
         old_dataListThis = dataListThisObj['old']
@@ -225,11 +227,8 @@ def release_reply(groupName:str, dataList: list):
             newDrop_str = ''
             uniqType_str = ''
             newDrop = dataListThis_this['newDrop']
-            if old_dataListThis is not None:
-                for old_dataListThis_this in old_dataListThis['dropList']:
-                    if old_dataListThis_this['id'] == dataListThis_this['id']:
-                        diff_count = dataListThis_this['total'] - old_dataListThis_this['total']
-                        break
+            if str(dataListThis_this['id']) in itemDict:
+                diff_count = dataListThis_this['total'] - itemDict[str(dataListThis_this['id'])]
             else:
                 diff_count = dataListThis_this['total']
             flagNotFirst = times > 1

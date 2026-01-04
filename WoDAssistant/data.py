@@ -6,8 +6,8 @@ import platform
 
 pluginName = 'WoD小助手'
 
-version = '0.4.9'
-svn = 49
+version = '0.5.0'
+svn = 50
 
 OlivOSInfo = f"[Python {platform.python_version()} OlivOS {OlivOS.infoAPI.OlivOS_Version}]"
 
