@@ -68,6 +68,12 @@ def get_itemInfo(data: dict):
     name = data.get('name', '未知物品')
     equipPosition = data.get('equipPosition', '未知位置')
     level = f"Lv. {data.get('minLv', 1)} ~ {data.get('maxLv', 40)}"
+    npcPrice = data.get('npcPrice', 0)
+    obtain = data.get('obtain', '')
+    if obtain is None:
+        obtain = ''
+    else:
+        obtain = f"【{obtain}】"
     worldDrop = '【世界掉落】' if data.get('worldDrop', False) is True else ''
     shop = '【商店售卖】' if data.get('shop', False) is True else ''
     uniq = '' 
@@ -76,6 +82,7 @@ def get_itemInfo(data: dict):
     res = (
         f"{id} - {name}{uniq}\n"
         f"{level} {worldDrop}{shop}\n"
+        f"【N价：{npcPrice}】{obtain}\n"
         f"装备于 {equipPosition}\n"
         f"https://delta.world-of-dungeons.org/wod/spiel/hero/item.php?{urlencode({'name':name})}"
     )
