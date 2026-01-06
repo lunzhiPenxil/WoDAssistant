@@ -7,7 +7,162 @@ import traceback
 import requests
 import json
 
-def get_fetchList(partyID: int = -1, partyName: str = "", searchSize = 1, current = 1):
+from urllib.parse import urlencode
+
+def get_fetchList_item(itemName: str = "", searchSize = 10, current = 1):
+    res = None
+    responseData = None
+    try:
+        response = requests.request(
+            method = 'POST',
+            url = 'https://www.christophero.xyz/wod/item/fetchList',
+            headers = {
+                'User-Agent': f'OlivOS/{OlivOS.infoAPI.OlivOS_Header_UA} WoDAssistant',
+                'Content-Type': 'application/json'
+            },
+            data = json.dumps(obj = {
+                "page": {
+                    "current": current,
+                    "size": searchSize
+                },
+                "query": {
+                    "name": itemName
+                }
+            }),
+            timeout = 60
+        )
+        responseData = json.loads(response.text)
+    except Exception as e:
+        traceback.print_exc()
+        WoDAssistant.logger.logProc(4, '数据解析失败')
+        responseData = None
+        res = None
+    if responseData is not None:
+        res = responseData
+    return res
+
+def get_itemSearchByName(itemName: str):
+    data: dict = get_fetchList_item(itemName = itemName, searchSize = 10)
+    res = []
+    try:
+        if data is not None \
+        and 'code' in data \
+        and 200 == data['code'] \
+        and 'status' in data \
+        and 1 == data['status'] \
+        and 'data' in data \
+        and type(data['data']) is dict \
+        and 'list' in data['data'] \
+        and type(data['data']['list']) is list \
+        and len(data['data']['list']) > 0:
+            for i in data['data']['list']:
+                res.append(i)
+    except Exception as e:
+        traceback.print_exc()
+        res = []
+        WoDAssistant.logger.logProc(3, '搜索团队失败')
+    return res
+
+def get_itemInfo(data: dict):
+    id = data.get('id', '未知ID')
+    name = data.get('name', '未知物品')
+    equipPosition = data.get('equipPosition', '未知位置')
+    level = f"Lv. {data.get('minLv', 1)} ~ {data.get('maxLv', 40)}"
+    worldDrop = '【世界掉落】' if data.get('worldDrop', False) is True else ''
+    shop = '【商店售卖】' if data.get('shop', False) is True else ''
+    uniq = '' 
+    if data.get('uniq', 'N') != 'N':
+        uniq = f"[{data.get('uniq', 'N')}]"
+    res = (
+        f"{id} - {name}{uniq}\n"
+        f"{level} {worldDrop}{shop}\n"
+        f"装备于 {equipPosition}\n"
+        f"https://delta.world-of-dungeons.org/wod/spiel/hero/item.php?{urlencode({'name':name})}"
+    )
+    return res
+
+def get_fetchList_skill(skillName: str = "", searchSize = 10, current = 1):
+    res = None
+    responseData = None
+    try:
+        response = requests.request(
+            method = 'POST',
+            url = 'https://www.christophero.xyz/wod/skill/fetchList',
+            headers = {
+                'User-Agent': f'OlivOS/{OlivOS.infoAPI.OlivOS_Header_UA} WoDAssistant',
+                'Content-Type': 'application/json'
+            },
+            data = json.dumps(obj = {
+                "page": {
+                    "current": current,
+                    "size": searchSize
+                },
+                "query": {
+                    "name": skillName
+                }
+            }),
+            timeout = 60
+        )
+        responseData = json.loads(response.text)
+    except Exception as e:
+        traceback.print_exc()
+        WoDAssistant.logger.logProc(4, '数据解析失败')
+        responseData = None
+        res = None
+    if responseData is not None:
+        res = responseData
+    return res
+
+def get_skillSearchByName(skillName: str):
+    data: dict = get_fetchList_skill(skillName = skillName, searchSize = 10)
+    res = []
+    try:
+        if data is not None \
+        and 'code' in data \
+        and 200 == data['code'] \
+        and 'status' in data \
+        and 1 == data['status'] \
+        and 'data' in data \
+        and type(data['data']) is dict \
+        and 'list' in data['data'] \
+        and type(data['data']['list']) is list \
+        and len(data['data']['list']) > 0:
+            for i in data['data']['list']:
+                res.append(i)
+    except Exception as e:
+        traceback.print_exc()
+        res = []
+        WoDAssistant.logger.logProc(3, '搜索团队失败')
+    return res
+
+def get_skillInfo(data: dict):
+    id = data.get('id', '未知ID')
+    name = data.get('name', '未知技能')
+    datatype = data.get('type', '-')
+    listLevel = []
+    for i in data.get('spList', []):
+        listLevel.append(f"【{i.get('professionName', '未知职业')}Lv.{i.get('lv', 1)}】")
+    listLevel_str = '\n'.join(listLevel)
+    res = (
+        f"{id} - {name}\n"
+        f"类型 {datatype}\n"
+        f"{listLevel_str}\n"
+        f"https://delta.world-of-dungeons.org/wod/spiel/hero/skill.php?{urlencode({'name':name})}"
+    )
+    return res
+
+def get_listByData(data: list):
+    dataList = []
+    index = 0
+    for i in data:
+        dataNameThis = "未知"
+        if 'name' in i:
+            dataNameThis = i['name']
+        index += 1
+        dataList.append(f"  [{index}] - {dataNameThis}")
+    return '\n'.join(dataList)
+
+def get_fetchList_group(partyID: int = -1, partyName: str = "", searchSize = 1, current = 1):
     res = None
     responseData = None
     try:
@@ -41,7 +196,7 @@ def get_fetchList(partyID: int = -1, partyName: str = "", searchSize = 1, curren
     return res
 
 def get_groupName(partyID: int):
-    data: dict = get_fetchList(partyID = partyID)
+    data: dict = get_fetchList_group(partyID = partyID)
     res = f"团队[{partyID}]"
     try:
         if data is not None \
@@ -61,7 +216,7 @@ def get_groupName(partyID: int):
     return res
 
 def get_groupSearchByName(partyName: str):
-    data: dict = get_fetchList(partyName = partyName, searchSize = 10)
+    data: dict = get_fetchList_group(partyName = partyName, searchSize = 10)
     res = []
     try:
         if data is not None \

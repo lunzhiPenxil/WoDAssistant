@@ -14,9 +14,10 @@ def unity_init_after(plugin_event: None, Proc: OlivOS.pluginAPI.shallow):
     threading.Thread(target = threadingSend).start()
 
 def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.shallow):
-    userID = plugin_event.data.user_id
-    botHash = plugin_event.bot_info.hash
-    groupID = plugin_event.data.group_id
+    WoDAssistant.context.get_input_listener(plugin_event)
+    userID = str(plugin_event.data.user_id)
+    botHash = str(plugin_event.bot_info.hash)
+    groupID = str(plugin_event.data.group_id)
     message_str: str = plugin_event.data.message
     message_str = message_str.strip(' ')
     command_this = '/wod'
@@ -27,31 +28,111 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
         if 0 == len(message_str):
             plugin_event.reply(
                 f"WoD小助手 WoDAssistant By lunzhiPenxil Ver.{WoDAssistant.data.version}({WoDAssistant.data.svn}) {WoDAssistant.data.OlivOSInfo}\n"
-                "欢迎使用本机器人! 请机器人管理员使用[/wod 帮助]查看帮助"
+                "欢迎使用本机器人! 请使用[/wod 帮助]查看帮助"
             )
-            return
-        # 非管理直接拒绝消息
-        if str(userID) not in WoDAssistant.data.listAdmin:
             return
         command_this = '帮助'
         if message_str.startswith(command_this):
-            plugin_event.reply(
+            reply_message_str = (
                 ' ==== WoD助手 ==== \n'
                 '/wod\n'
                 '  - 查看机器人信息\n'
                 '/wod 帮助\n'
                 '  - 查看帮助\n'
-                '/wod 订阅团队 [团队ID]\n'
-                '  - 在群聊中发送以订阅播报\n'
-                '/wod 解绑团队 [团队ID]\n'
-                '  - 在群聊中发送以解绑播报\n'
-                '/wod 订阅列表\n'
-                '  - 查看本群的订阅列表\n'
-                '/wod 查询团队 [团队名称]\n'
-                '  - 用名称查询团队ID\n'
-                '/wod 刷新\n'
-                '  - 立即进行一次刷新'
+                '/wod 查询物品 [物品名称]\n'
+                '  - 用名称查询物品\n'
+                '/wod 查询技能 [技能名称]\n'
+                '  - 用名称查询技能'
             )
+            if isAdmin(userID):
+                reply_message_str += (
+                    '\n'
+                    '/wod 订阅团队 [团队ID]\n'
+                    '  - 在群聊中发送以订阅播报\n'
+                    '/wod 解绑团队 [团队ID]\n'
+                    '  - 在群聊中发送以解绑播报\n'
+                    '/wod 订阅列表\n'
+                    '  - 查看本群的订阅列表\n'
+                    '/wod 查询团队 [团队名称]\n'
+                    '  - 用名称查询团队ID\n'
+                    '/wod 刷新\n'
+                    '  - 立即进行一次刷新'
+                )
+            plugin_event.reply(reply_message_str)
+            return
+        command_this = '查询物品'
+        if message_str.startswith(command_this):
+            message_str = message_str.lstrip(command_this)
+            message_str = message_str.lstrip(' ')
+            if len(message_str) > 0:
+                itemName = message_str
+                itemData = WoDAssistant.webAPI.get_itemSearchByName(itemName)
+                if len(itemData) > 0:
+                    if len(itemData) == 1:
+                        plugin_event.reply(
+                            WoDAssistant.webAPI.get_itemInfo(itemData[0])
+                        )
+                    else:
+                        reply_message_str = '找到如下相近物品:\n'
+                        reply_message_str += WoDAssistant.webAPI.get_listByData(itemData)
+                        reply_message_str += f"\n请输入[1-{len(itemData)}]的数字"
+                        plugin_event.reply(reply_message_str)
+                        regex_str = r'^(10|[1-9])$'
+                        if len(itemData) < 10:
+                            regex_str = f'^([1-{len(itemData)}])$'
+                        if result := WoDAssistant.context.get_input(
+                            plugin_event = plugin_event,
+                            regex = regex_str
+                        ):
+                            if len(result) >= 1:
+                                if result_int := get_int_safe(result[0]):
+                                    plugin_event.reply(
+                                        WoDAssistant.webAPI.get_itemInfo(itemData[result_int - 1])
+                                    )
+                        else:
+                            reply_message_str = f"请输入[1-{len(itemData)}]的数字"
+                else:
+                    plugin_event.reply('未找到相近物品')
+            else:
+                plugin_event.reply('请输入物品名称')
+            return
+        command_this = '查询技能'
+        if message_str.startswith(command_this):
+            message_str = message_str.lstrip(command_this)
+            message_str = message_str.lstrip(' ')
+            if len(message_str) > 0:
+                skillName = message_str
+                skillData = WoDAssistant.webAPI.get_skillSearchByName(skillName)
+                if len(skillData) > 0:
+                    if len(skillData) == 1:
+                        plugin_event.reply(
+                            WoDAssistant.webAPI.get_skillInfo(skillData[0])
+                        )
+                    else:
+                        reply_message_str = '找到如下相近技能:\n'
+                        reply_message_str += WoDAssistant.webAPI.get_listByData(skillData)
+                        reply_message_str += f"\n请输入[1-{len(skillData)}]的数字"
+                        plugin_event.reply(reply_message_str)
+                        regex_str = r'^(10|[1-9])$'
+                        if len(skillData) < 10:
+                            regex_str = f'^([1-{len(skillData)}])$'
+                        if result := WoDAssistant.context.get_input(
+                            plugin_event = plugin_event,
+                            regex = regex_str
+                        ):
+                            if len(result) >= 1:
+                                if result_int := get_int_safe(result[0]):
+                                    plugin_event.reply(
+                                        WoDAssistant.webAPI.get_skillInfo(skillData[result_int - 1])
+                                    )
+                        else:
+                            reply_message_str = f"请输入[1-{len(skillData)}]的数字"
+                else:
+                    plugin_event.reply('未找到相近技能')
+            else:
+                plugin_event.reply('请输入技能名称')
+            return
+        if not isAdmin(userID):
             return
         command_this = '订阅团队'
         if message_str.startswith(command_this):
@@ -69,8 +150,8 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                 if str(partyID) not in WoDAssistant.data.listBroadcastGroup[botHash] \
                 or type(WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)]) is not list:
                     WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)] = []
-                if str(groupID) not in WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)]:
-                    WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)].append(str(groupID))
+                if groupID not in WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)]:
+                    WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)].append(groupID)
                 WoDAssistant.dataIO.save_data()
                 plugin_event.reply('已将该团队订阅至本群')
             return
@@ -86,8 +167,8 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                 and type(WoDAssistant.data.listBroadcastGroup[botHash]) is dict \
                 and str(partyID) in WoDAssistant.data.listBroadcastGroup[botHash] \
                 and type(WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)]) is list:
-                    while str(groupID) in WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)]:
-                        WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)].remove(str(groupID))
+                    while groupID in WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)]:
+                        WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)].remove(groupID)
                     if len(WoDAssistant.data.listBroadcastGroup[botHash][str(partyID)]) <= 0:
                         WoDAssistant.data.listBroadcastGroup[botHash].pop(str(partyID))
                 flag_hit = False
@@ -109,7 +190,7 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
             if botHash in WoDAssistant.data.listBroadcastGroup \
             and type(WoDAssistant.data.listBroadcastGroup[botHash]) is dict:
                 for i in WoDAssistant.data.listBroadcastGroup[botHash]:
-                    if str(groupID) in WoDAssistant.data.listBroadcastGroup[botHash][i]:
+                    if groupID in WoDAssistant.data.listBroadcastGroup[botHash][i]:
                         broadcastList.append(f"  {i} - {WoDAssistant.webAPI.get_groupName(i)}")
             if len(broadcastList) > 0:
                 reply_message_str += f"距离下次刷新还有[{WoDAssistant.data.broadcastTimer}]秒\n"
@@ -119,14 +200,13 @@ def unity_group_reply(plugin_event: OlivOS.API.Event, Proc: OlivOS.pluginAPI.sha
                 reply_message_str += '本群订阅列表为空'
             plugin_event.reply(reply_message_str)
             return
-        command_this = '搜索团队'
+        command_this = '查询团队'
         if message_str.startswith(command_this):
             message_str = message_str.lstrip(command_this)
             message_str = message_str.lstrip(' ')
             partyName = message_str
             reply_message_str = ''
             data = WoDAssistant.webAPI.get_groupSearchByName(partyName = partyName)
-            data.reverse()
             if len(data) > 0:
                 reply_message_str += '找到如下相近团队:\n'
                 partyList = []
@@ -246,3 +326,7 @@ def release_reply(groupName:str, dataDict: dict):
         res.append(resThis)
     res.reverse()
     return res
+
+# 判断是否为管理
+def isAdmin(userID: str):
+    return userID in WoDAssistant.data.listAdmin
